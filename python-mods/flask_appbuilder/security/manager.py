@@ -493,6 +493,28 @@ class BaseSecurityManager(AbstractSecurityManager):
             Since there are different OAuth API's with different ways to
             retrieve user info
         """
+        print("Let's test for provider {0}".format(provider))
+        # for Orchestra 
+        if 'qmatic' in provider: 
+            print("Let's test Qmatic {0}".format(session["orchestra"]))
+            print("Remote {0}:".format(self.appbuilder.sm.oauth_remotes[provider]))
+            me = self.appbuilder.sm.oauth_remotes[provider].get('https://' + session["orchestra"] + '/oauth2server/user/me')
+            print('https://' + session["orchestra"] + '/oauth2server/user/me')
+            #me = self.appbuilder.sm.oauth_remotes[provider].get('https://slatest.qmaticcloud.com/oauth2server/user/me')
+            print("User info from Orchestra OLD: {0}".format(me.data))
+            print("Errro from Linkedin: {0}".format(me.data.get('error', ''))) 
+            if me.data.get("error",'') != '':
+                me = self.appbuilder.sm.oauth_remotes[provider].get('https://' + session["orchestra"] + '/qsystem/rest/security/account')
+                print("User info from Orcestra NEW: {0}".format(me.data))
+                return {'username': provider  + "_" + me.data.get('userName', ''),
+                    'email': me.data.get('email', ''),
+                    'first_name': me.data.get('firstName', ''),
+                    'last_name': me.data.get('lastName', '')}
+            else:
+                return {'username': provider  + "_" + me.data.get('name', ''),
+                    'email': me.data.get('email', ''),
+                    'first_name': me.data.get('firstName', ''),
+                    'last_name': me.data.get('lastName', '')}		
         # for GITHUB
         if provider == "github" or provider == "githublocal":
             me = self.appbuilder.sm.oauth_remotes[provider].get("user")
