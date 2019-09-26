@@ -1,0 +1,11 @@
+Changes done to the external modules are kept on \python-mods directory.
+The files are inside the runtime must be replaced with the files inside python-mods
+
+eg:
+Qmatic customization for flask_appbuilder are kept under \python-mods\flask_appbuilder
+The files should be copied to the flask_appbuilder in the python runtime.
+
+qmatic customization
+\python-mods\flask_appbuilder
+runtime
+/venv/lib/python3.6/site-packages/flask_appbuilder/
