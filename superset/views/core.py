@@ -3007,6 +3007,20 @@ def caravel(url):
     return redirect(request.full_path.replace("caravel", "superset"))
 
 
+@app.route('/dashboard/all', methods=['GET'])
+def get_all_dashboards():
+    if not current_user.is_authenticated:
+        return Response(json.dumps({ 'code': 401, 'message': 'Login required' }), status=401)
+    all_dashboard_coll = []
+    try:
+        all_dashboards = db.session.query(models.Dashboard).order_by(models.Dashboard.id)
+        for board in all_dashboards:
+            all_dashboard_coll.append({ 'id': board.id, 'title': board.dashboard_title, 'slug': board.slug })
+        return Response(json.dumps(all_dashboard_coll), status=200)
+    except Exception as e:
+        return json_error_response(e)
+
+
 @app.route('/versions/<tenant>', methods=['GET'])
 def get_version(tenant):
     if not current_user.is_authenticated:
@@ -3021,6 +3035,7 @@ def get_version(tenant):
                 return Response(json.dumps({ 'code': 404, 'message': 'Version not available for ' + tenant }), status=404)
         except Exception as e:
             return json_error_response(e)
+
 
 @app.route('/versions', methods=['GET'])
 def get_all_versions():
