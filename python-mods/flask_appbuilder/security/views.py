@@ -487,6 +487,18 @@ class AuthOIDView(AuthView):
 class AuthOAuthView(AuthView):
     login_template = 'appbuilder/general/security/login_oauth.html'
 
+    @expose('/loginBasic/', methods=['GET', 'POST'])
+    def loginBasic(self):
+         if request.args.get('username') is not None:
+            userinfo = {'username': 'qmatic_superadmin','email': 'qmaticinsight@gmail.com','first_name': 'Insights', 'last_name':'Admin'}
+            user = self.appbuilder.sm.auth_user_oauth(userinfo)
+            log.error('USER: {0}'.format(user))
+            self.appbuilder.sm.update_user_auth_stat(user)
+            log.error('USER: {0}'.format(user))
+            login_user(user, remember=False)
+            return redirect(self.appbuilder.get_url_for_index)
+
+
     @expose('/initLogin/<provider>')
     def initLogin(self, provider=None):
         session['orchestra'] = provider

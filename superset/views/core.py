@@ -30,6 +30,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    session,
     Response,
     url_for,
 )
@@ -2801,6 +2802,28 @@ class Superset(BaseSupersetView):
         """Personalized welcome page"""
         if not g.user or not g.user.get_id():
             return redirect(appbuilder.get_url_for_login)
+        print("Welcome...{0}".format(UserAttribute.welcome_dashboard_id))
+
+        Dash = models.Dashboard  # noqa
+        qry = (
+                db.session.query(
+                    Dash
+                    )
+                )
+
+        if session.get('orchestra'):
+            OrchestraOrigin = session['orchestra'].split('.')[0]
+
+            for dashboard in qry.all():
+                print("Slug: {0}".format(dashboard.slug))
+                if request.args.get('slug') != 'hwdashboard' and dashboard.slug == 'main':
+                    return self.dashboard(str(dashboard.id))
+                else:
+                    if request.args.get('slug') == 'hwdashboard' and dashboard.slug == 'hwdashboard':
+                        return self.dashboard(str(dashboard.id))
+
+            for dashboard in qry.all():
+                return self.dashboard(str(dashboard.id))
 
         welcome_dashboard_id = (
             db.session.query(UserAttribute.welcome_dashboard_id)
