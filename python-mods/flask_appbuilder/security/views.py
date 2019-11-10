@@ -509,10 +509,15 @@ class AuthOAuthView(AuthView):
     @expose('/login/<provider>')
     @expose('/login/<provider>/<register>')
     def login(self, provider=None, register=None):
+        print ("Going to call authorize for: {0}".format(provider))
         if provider is not None:
             session.clear()
             session['orchestra'] = provider
             log.debug('Provider: {0}'.format(provider))
+
+            print ("Called with slug: {0}".format(request.args.get('slug')))
+            if request.args.get('slug') is not None:
+                session['orchestra_slug'] = request.args.get('slug')
 
         if g.user is not None and g.user.is_authenticated:
             log.debug("Already authenticated {0}".format(g.user))

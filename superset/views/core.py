@@ -46,6 +46,7 @@ from flask_babel import lazy_gettext as _
 import pandas as pd
 import simplejson as json
 from sqlalchemy import and_, or_, select
+from sqlalchemy import desc
 from werkzeug.routing import BaseConverter
 
 from superset import (
@@ -2804,32 +2805,71 @@ class Superset(BaseSupersetView):
             return redirect(appbuilder.get_url_for_login)
         print("Welcome...{0}".format(UserAttribute.welcome_dashboard_id))
 
+        Slice = models.Slice  # noqa
         Dash = models.Dashboard  # noqa
+        User = security_manager.user_model
+
+        datasource_perms = set()
+        for role in g.user.roles:
+            for perm_view in role.permissions:
+                t = (perm_view.permission.name, perm_view.view_menu.name)
+                datasource_perms.add(perm_view.view_menu.name)
+
+        slice_ids_qry = (
+                db.session
+                .query(Slice.id)
+                .filter(Slice.perm.in_(datasource_perms))
+        )
+
+        owner_ids_qry = (
+                db.session
+                .query(Dash.id)
+                .join(Dash.owners)
+                .filter(User.id == User.get_user_id())
+        )
+
         qry = (
-                db.session.query(
-                    Dash
+                db.session.query(models.Dashboard)
+                .filter(
+                    or_(Dash.id.in_(
+                        db.session.query(Dash.id)
+                        .distinct()
+                        .join(Dash.slices)
+                        .filter(Slice.id.in_(slice_ids_qry)),
+                        ), Dash.id.in_(owner_ids_qry)),
                     )
-                )
+                .order_by(desc(Dash.id))
+        )
+
+        if session.get('orchestra'):
+            print("Orchestra: {0}".format(session['orchestra']))
 
         if session.get('orchestra'):
             OrchestraOrigin = session['orchestra'].split('.')[0]
+            print("OrchestraOrigin: {0}".format(OrchestraOrigin))
+            print("Slug session: {0}:".format(session.get('orchestra_slug')))
 
-            for dashboard in qry.all():
-                print("Slug: {0}".format(dashboard.slug))
-                if request.args.get('slug') != 'hwdashboard' and dashboard.slug == 'main':
-                    return self.dashboard(str(dashboard.id))
-                else:
-                    if request.args.get('slug') == 'hwdashboard' and dashboard.slug == 'hwdashboard':
+            if session.get('orchestra_slug'):
+                OrchestraSlug = session['orchestra_slug']
+                print("OrchestraSlug: {0}".format(OrchestraSlug))
+                for dashboard in qry.all():
+                    print("Slug: {0}".format(dashboard.slug))
+                    if 'hwdashboard' not in OrchestraSlug and 'main' in dashboard.slug:
+                        return self.dashboard(str(dashboard.id))
+                    if OrchestraSlug == dashboard.slug:
                         return self.dashboard(str(dashboard.id))
 
-            for dashboard in qry.all():
-                return self.dashboard(str(dashboard.id))
+
+        for dashboard in qry.all():
+            return self.dashboard(str(dashboard.id))
+
 
         welcome_dashboard_id = (
             db.session.query(UserAttribute.welcome_dashboard_id)
             .filter_by(user_id=g.user.get_id())
             .scalar()
         )
+
         if welcome_dashboard_id:
             return self.dashboard(str(welcome_dashboard_id))
 
@@ -3030,20 +3070,6 @@ def caravel(url):
     return redirect(request.full_path.replace("caravel", "superset"))
 
 
-@app.route('/dashboard/all', methods=['GET'])
-def get_all_dashboards():
-    if not current_user.is_authenticated:
-        return Response(json.dumps({ 'code': 401, 'message': 'Login required' }), status=401)
-    all_dashboard_coll = []
-    try:
-        all_dashboards = db.session.query(models.Dashboard).order_by(models.Dashboard.id)
-        for board in all_dashboards:
-            all_dashboard_coll.append({ 'id': board.id, 'title': board.dashboard_title, 'slug': board.slug })
-        return Response(json.dumps(all_dashboard_coll), status=200)
-    except Exception as e:
-        return json_error_response(e)
-
-
 @app.route('/versions/<tenant>', methods=['GET'])
 def get_version(tenant):
     if not current_user.is_authenticated:
@@ -3058,7 +3084,6 @@ def get_version(tenant):
                 return Response(json.dumps({ 'code': 404, 'message': 'Version not available for ' + tenant }), status=404)
         except Exception as e:
             return json_error_response(e)
-
 
 @app.route('/versions', methods=['GET'])
 def get_all_versions():
