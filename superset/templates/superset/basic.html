@@ -41,7 +41,7 @@
     >
   </head>
 
-  <body>
+  <body {% if standalone_mode %}class="standalone"{% endif %}>
     {% block navbar %}
       {% if not standalone_mode %}
         <header class="top" role="header">
@@ -50,11 +50,13 @@
       {% endif %}
     {% endblock %}
 
+	<div class="wrap" {% if standalone_mode %}style="display:none"{% endif %}>
     {% block body %}
       <div id="app" data-bootstrap="{{ bootstrap_data }}" >
         <img src="/static/assets/images/loading.gif" style="width: 50px; margin: 10px;">
       </div>
     {% endblock %}
+	</div>
 
     <!-- Modal for misc messages / alerts  -->
     <div class="misc-modal modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
@@ -94,6 +96,22 @@
 				    }
 				}, 100);
             }
+			
+			function hideDiv() {
+				var len = $( ".background--white" ).length;
+				$( ".background--white" ).each(function() {
+					$( this ).hide();
+				});
+				$('.dashboard-header').hide();
+				$(".wrap").fadeIn(2000);
+				if(len == 0) {
+					setTimeout(hideDiv, 100);
+				}
+			}
+
+			if($('body').hasClass('standalone')) {
+				hideDiv();
+			}
         });
     </script>
 	
