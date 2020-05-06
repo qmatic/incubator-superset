@@ -375,17 +375,35 @@ class BaseSecurityManager(AbstractSecurityManager):
         """
         print("Let's test for provider {0}".format(provider))
         # for Orchestra 
-        if 'qmatic' in provider: 
-            print("Let's test Qmatic {0}".format(session["orchestra"]))
+        if 'qmatic' in provider:
+            #session["orchestra"] = '172.22.215.113:8080'
+            scheme = 'http://'
+            host = session["orchestra"]
+
+            print("Let's test Qmatic {0}".format(host))
             print("Remote {0}:".format(self.appbuilder.sm.oauth_remotes[provider]))
-            me = self.appbuilder.sm.oauth_remotes[provider].get('https://' + session["orchestra"] + '/oauth2server/user/me')
-            print('https://' + session["orchestra"] + '/oauth2server/user/me')
-            #me = self.appbuilder.sm.oauth_remotes[provider].get('https://slatest.qmaticcloud.com/oauth2server/user/me')
+
+            me = self.appbuilder.sm.oauth_remotes[provider].get('' + scheme + host + '/oauth2server/user/me')
+            print('' + scheme + host + '/oauth2server/user/me')
+            #me = self.appbuilder.sm.oauth_remotes[provider].get('' + scheme + 'slatest.qmaticcloud.com/oauth2server/user/me')
             print("User info from Orchestra OLD: {0}".format(me.data))
             print("Errro from Linkedin: {0}".format(me.data.get('error', ''))) 
             if me.data.get("error",'') != '':
-                me = self.appbuilder.sm.oauth_remotes[provider].get('https://' + session["orchestra"] + '/qsystem/rest/security/account')
+                me = self.appbuilder.sm.oauth_remotes[provider].get('' + scheme + host + '/qsystem/rest/security/account')
                 print("User info from Orcestra NEW: {0}".format(me.data))
+
+                # set branches to the session
+                branches_data_res = self.appbuilder.sm.oauth_remotes[provider].get('' + scheme + host + '/qsystem/rest/servicepoint/branches')
+                user_branches = []
+                branches_data = branches_data_res.data
+
+                for branch_data in branches_data:
+                    branch_name = branch_data.get('name')
+                    user_branches.append(branch_name)
+
+                print ("User has permissions to {0} branches ".format(user_branches))
+                session['permitted_branches'] = user_branches
+
                 return {'username': provider  + "_" + me.data.get('userName', ''),
                     'email': me.data.get('email', ''),
                     'first_name': me.data.get('firstName', ''),
