@@ -34,7 +34,7 @@ import re
 import uuid
 
 from dateutil import relativedelta as rdelta
-from flask import request
+from flask import request, session
 from flask_babel import lazy_gettext as _
 import geohash
 from geopy.point import Point
@@ -306,6 +306,28 @@ class BaseViz(object):
             "time_grain_sqla": form_data.get("time_grain_sqla", ""),
             "druid_time_origin": form_data.get("druid_time_origin", ""),
         }
+
+        has_branch_filter = False
+        filters  = self.form_data.get('filters', [])
+        if session.get('permitted_branches') :
+            permitted_branches = session['permitted_branches']
+            branches = []
+
+            for filter in filters:
+                key = filter.get("col")
+                if( key == "branch" ):
+                    has_branch_filter = True
+                    unfiltered_branches = filter.get("val")
+
+                    for branchName in unfiltered_branches:
+                        if branchName in permitted_branches:
+                            branches.append(branchName)
+
+                    filter['val'] = branches
+
+            if has_branch_filter == False :
+                branch_filter = {'col': 'branch', 'op': 'in', 'val': permitted_branches}
+                filters.append(branch_filter)
 
         d = {
             "granularity": granularity,

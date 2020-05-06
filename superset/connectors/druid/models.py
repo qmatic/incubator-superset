@@ -26,7 +26,7 @@ from multiprocessing.pool import ThreadPool
 import re
 
 from dateutil.parser import parse as dparse
-from flask import escape, Markup
+from flask import escape, Markup, session
 from flask_appbuilder import Model
 from flask_appbuilder.models.decorators import renders
 from flask_babel import lazy_gettext as _
@@ -948,6 +948,22 @@ class DruidDatasource(Model, BaseDatasource):
             metric="count",
             threshold=limit,
         )
+
+        # Only filtering branch column depends on user branches. We can't filter all the columns because we dont
+        # know every datasource has branch field
+        if column_name == 'branch' and session.get('permitted_branches'):
+            permitted_branches = session['permitted_branches']
+            br_filter = Filter(type="in", dimension="branch", values=permitted_branches)
+            qry = dict(
+                    datasource=self.datasource_name,
+                    granularity='all',
+                    intervals=from_dttm.isoformat() + '/' + datetime.now().isoformat(),
+                    aggregations=dict(count=count('count')),
+                    dimension=column_name,
+                    filter=br_filter,
+                    metric='count',
+                    threshold=limit,
+            )
 
         client = self.cluster.get_pydruid_client()
         client.topn(**qry)
