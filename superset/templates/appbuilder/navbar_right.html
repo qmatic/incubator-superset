@@ -1,4 +1,4 @@
-
+<!--
 {% set locale = session['locale'] %}
 {% if not locale %}
     {% set locale = 'en' %}
@@ -24,7 +24,7 @@
     </ul>
 </li>
 {% endif %}
-
+-->
 
 
 {% if not current_user.is_anonymous %}
@@ -38,7 +38,7 @@
         <i class="fa fa-user"></i>&nbsp;<b class="caret"></b>
       </a>
         <ul class="dropdown-menu">
-            <li><a href="{{appbuilder.get_url_for_userinfo}}"><span class="fa fa-fw fa-user"></span>{{_("Profile")}}</a></li>
+		<!--<li><a href="{{appbuilder.get_url_for_userinfo}}"><span class="fa fa-fw fa-user"></span>{{_("Profile")}}</a></li>-->
             <li><a href="{{appbuilder.get_url_for_logout}}"><span class="fa fa-fw fa-sign-out"></span>{{_("Logout")}}</a></li>
         </ul>
     </li>
