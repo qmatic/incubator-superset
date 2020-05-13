@@ -497,7 +497,7 @@ class BaseSecurityManager(AbstractSecurityManager):
         # for Orchestra 
         if 'qmatic' in provider:
             #session["orchestra"] = '172.22.215.113:8080'
-            scheme = 'http://'
+            scheme = 'https://'
             host = session["orchestra"]
 
             print("Let's test Qmatic {0}".format(host))
