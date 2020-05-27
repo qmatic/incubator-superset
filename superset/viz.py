@@ -1322,6 +1322,9 @@ class MultiLineViz(NVD3Viz):
         slices1 = db.session.query(Slice).filter(Slice.id.in_(slice_ids1)).all()
         slice_ids2 = fd.get("line_charts_2")
         slices2 = db.session.query(Slice).filter(Slice.id.in_(slice_ids2)).all()
+        slice_ids3 = fd.get('ts_bar_charts')
+        slices3 = db.session.query(Slice).filter(Slice.id.in_(slice_ids3)).all()
+        slices2.extend(slices3)        
         return {
             "slices": {
                 "axis1": [slc.data for slc in slices1],

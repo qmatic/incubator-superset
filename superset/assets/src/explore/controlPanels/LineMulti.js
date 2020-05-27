@@ -54,6 +54,7 @@ export default {
       expanded: false,
       controlSetRows: [
         ['line_charts_2', 'y_axis_2_format'],
+		['ts_bar_charts', 'y_axis_2_format'],
       ],
     },
     {

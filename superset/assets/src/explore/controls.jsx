@@ -2309,10 +2309,10 @@ export const controls = {
   line_charts_2: {
     type: 'SelectAsyncControl',
     multi: true,
-    label: t('Right Axis chart(s)'),
+    label: t('Right Axis line chart(s)'),
     validators: [],
     default: [],
-    description: t('Choose one or more charts for right axis'),
+    description: t('Choose one or more line charts for right axis'),
     dataEndpoint: '/sliceasync/api/read?_flt_0_viz_type=line&_flt_7_viz_type=line_multi',
     placeholder: t('Select charts'),
     onAsyncErrorMessage: t('Error while fetching charts'),
@@ -2324,6 +2324,24 @@ export const controls = {
     },
   },
 
+  ts_bar_charts: {
+    type: 'SelectAsyncControl',
+    multi: true,
+    label: t('Right Axis bar chart(s)'),
+    validators: [],
+    default: [],
+    description: t('Choose one or more bar charts for right axis'),
+    dataEndpoint: '/sliceasync/api/read?_flt_0_viz_type=bar',
+    placeholder: t('Select charts'),
+    onAsyncErrorMessage: t('Error while fetching charts'),
+    mutator: (data) => {
+      if (!data || !data.result) {
+        return [];
+      }
+      return data.result.map(o => ({ value: o.id, label: o.slice_name }));
+    },
+  },
+	
   prefix_metric_with_slice_name: {
     type: 'CheckboxControl',
     label: t('Prefix metric name with slice name'),
