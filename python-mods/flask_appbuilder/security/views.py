@@ -489,14 +489,25 @@ class AuthOAuthView(AuthView):
 
     @expose('/loginBasic/', methods=['GET', 'POST'])
     def loginBasic(self):
-         if request.args.get('username') is not None:
-            userinfo = {'username': 'qmatic_superadmin','email': 'qmaticinsight@gmail.com','first_name': 'Insights', 'last_name':'Admin'}
-            user = self.appbuilder.sm.auth_user_oauth(userinfo)
-            log.error('USER: {0}'.format(user))
-            self.appbuilder.sm.update_user_auth_stat(user)
-            log.error('USER: {0}'.format(user))
-            login_user(user, remember=False)
-            return redirect(self.appbuilder.get_url_for_index)
+        if request.args.get('username') is not None and request.args.get('password') is not None:
+            username = request.args.get('username')
+            password = request.args.get('password')
+            user = self.appbuilder.sm.auth_user_db(username, password)
+            if user:
+                print ('user is found ......... : ' + user.username + " , " + user.email + " , " + user.first_name + " , "+ user.last_name)
+                userinfo = {'username': user.username,'email': user.email,'first_name':user.first_name , 'last_name':user.last_name}
+                user = self.appbuilder.sm.auth_user_oauth(userinfo)
+                log.error('USER: {0}'.format(user))
+                self.appbuilder.sm.update_user_auth_stat(user)
+                log.error('USER: {0}'.format(user))
+                login_user(user, remember=False)
+                return redirect(self.appbuilder.get_url_for_index)
+            else:
+                log.error ('no user found for the given username & password')
+                return 'Wrong Credentials !!! '
+        else:
+            log.error('Username or Password is missing')
+            return 'Invalid Credentials !!!'
 
 
     @expose('/initLogin/<provider>')
