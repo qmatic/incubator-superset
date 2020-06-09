@@ -3069,6 +3069,35 @@ def panoramix(url):
 def caravel(url):
     return redirect(request.full_path.replace("caravel", "superset"))
 
+@app.route('/dashboards', methods=['GET'])
+def get_dashboards_from_slug():
+    if not current_user.is_authenticated:
+        return Response(json.dumps({ 'code': 401, 'message': 'Login required' }), status=401)
+    all_dashboard_coll = []
+    slug_name = request.args.get('slug')
+    if slug_name is None:
+        return Response(json.dumps({ 'code': 400, 'message': 'slug query parameter required' }), status=400)
+    slug_exp = "{0}%".format(slug_name)
+    try:
+        all_dashboards = db.session.query(models.Dashboard).filter(models.Dashboard.slug.like(slug_exp)).order_by(models.Dashboard.id)
+        for board in all_dashboards:
+            all_dashboard_coll.append({ 'id': board.id, 'title': board.dashboard_title, 'slug': board.slug })
+        return Response(json.dumps(all_dashboard_coll), status=200)
+    except Exception as e:
+        return json_error_response(e)
+        
+@app.route('/dashboard/all', methods=['GET'])
+def get_all_dashboards():
+    if not current_user.is_authenticated:
+        return Response(json.dumps({ 'code': 401, 'message': 'Login required' }), status=401)
+    all_dashboard_coll = []
+    try:
+        all_dashboards = db.session.query(models.Dashboard).order_by(models.Dashboard.id)
+        for board in all_dashboards:
+            all_dashboard_coll.append({ 'id': board.id, 'title': board.dashboard_title, 'slug': board.slug })
+        return Response(json.dumps(all_dashboard_coll), status=200)
+    except Exception as e:
+        return json_error_response(e)
 
 @app.route('/versions/<tenant>', methods=['GET'])
 def get_version(tenant):
