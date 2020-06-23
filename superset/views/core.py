@@ -22,7 +22,7 @@ from flask_babel import lazy_gettext as _
 import pandas as pd
 import simplejson as json
 import sqlalchemy as sqla
-from sqlalchemy import and_, create_engine, MetaData, or_, update
+from sqlalchemy import and_, create_engine, MetaData, or_, update, case
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.exc import IntegrityError
 from unidecode import unidecode
@@ -100,12 +100,33 @@ class DashboardFilter(SupersetFilter):
     """List dashboards for which users have access to at least one slice or are owners"""
 
     def apply(self, query, func):  # noqa
-        if security_manager.all_datasource_access():
-            return query
+
         Slice = models.Slice  # noqa
         Dash = models.Dashboard  # noqa
         User = security_manager.user_model
+        Favorites = models.FavStar
         # TODO(bogdan): add `schema_access` support here
+
+        """
+        define custome order by clause
+            1. Main Dashboard
+            2. Favorit dashboards
+            3. Other dashboards
+        """
+        orderBy = case(
+            [
+                (Dash.slug == '_main', 0),
+                (Favorites.obj_id > 0, 1)
+            ],
+            else_ = 2
+        )
+
+        if 'SELECT count(' not in str(query): # include order by clause into filter query 
+            query = query.outerjoin(Favorites, Favorites.obj_id == Dash.id).order_by(orderBy)
+
+        if security_manager.all_datasource_access():
+            return query
+
         datasource_perms = self.get_view_menus('datasource_access')
         slice_ids_qry = (
             db.session
