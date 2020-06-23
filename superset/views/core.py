@@ -46,7 +46,7 @@ from flask_babel import lazy_gettext as _
 import pandas as pd
 import simplejson as json
 from sqlalchemy import and_, or_, select
-from sqlalchemy import desc
+from sqlalchemy import desc, case
 from werkzeug.routing import BaseConverter
 
 from superset import (
@@ -216,6 +216,23 @@ class DashboardFilter(SupersetFilter):
         User = ab_models.User
         Slice = models.Slice  # noqa
         Favorites = models.FavStar
+
+        """
+        define custome order by clause
+            1. Main Dashboard
+            2. Favorit dashboards
+            3. Other dashboards
+        """
+        orderBy = case(
+            [
+                (Dash.slug == '_main', 0),
+                (Favorites.obj_id > 0, 1)
+            ],
+            else_ = 2
+        )
+
+        if 'SELECT count(' not in str(query): # include order by clause into filter query 
+            query = query.outerjoin(Favorites, Favorites.obj_id == Dash.id).order_by(orderBy)
 
         user_roles = [role.name.lower() for role in list(self.get_user_roles())]
         if "admin" in user_roles:
