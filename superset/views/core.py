@@ -2844,10 +2844,10 @@ class Superset(BaseSupersetView):
 
             for dashboard in qry.all():
                 print("Slug: {0}".format(dashboard.slug))
-                if request.args.get('slug') != 'hwdashboard' and dashboard.slug == 'main':
+                if request.args.get('slug') != 'hwdashboard' and OrchestraOrigin.lower() in dashboard.slug and '_main' in dashboard.slug:
                     return self.dashboard(str(dashboard.id))
                 else:
-                    if request.args.get('slug') == 'hwdashboard' and dashboard.slug == 'hwdashboard':
+                    if request.args.get('slug') == 'hwdashboard' and OrchestraOrigin.lower() in dashboard.slug and '_hwdashboard' in dashboard.slug:
                         return self.dashboard(str(dashboard.id))
 
             for dashboard in qry.all():
