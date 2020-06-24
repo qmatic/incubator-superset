@@ -2871,11 +2871,10 @@ class Superset(BaseSupersetView):
                 print("OrchestraSlug: {0}".format(OrchestraSlug))
                 for dashboard in qry.all():
                     print("Slug: {0}".format(dashboard.slug))
-                    if 'hwdashboard' not in OrchestraSlug and 'main' in dashboard.slug:
+                    if 'hwdashboard' not in OrchestraSlug and 'main' in dashboard.slug and OrchestraOrigin.lower() in dashboard.slug:
                         return self.dashboard(str(dashboard.id))
-                    if OrchestraSlug == dashboard.slug:
+                    if OrchestraSlug == dashboard.slug and OrchestraOrigin.lower() in dashboard.slug:
                         return self.dashboard(str(dashboard.id))
-
 
         for dashboard in qry.all():
             return self.dashboard(str(dashboard.id))
