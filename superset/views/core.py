@@ -115,7 +115,7 @@ class DashboardFilter(SupersetFilter):
         """
         orderBy = case(
             [
-                (Dash.slug == '_main', 0),
+                (Dash.slug.like('%_main'), 0),
                 (Favorites.obj_id > 0, 1)
             ],
             else_ = 2
