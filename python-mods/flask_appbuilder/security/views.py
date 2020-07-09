@@ -513,6 +513,7 @@ class AuthOAuthView(AuthView):
     @expose('/initLogin/<provider>')
     def initLogin(self, provider=None):
         session['orchestra'] = provider
+        session['tenant'] = provider
         log.info("Going to call authorize for: {0}".format(provider));
         return self.appbuilder.sm.oauth_remotes[provider].authorize(callback=url_for('.oauth_authorized',provider=provider, _external=True))    
 
@@ -524,6 +525,7 @@ class AuthOAuthView(AuthView):
         if provider is not None:
             session.clear()
             session['orchestra'] = provider
+            session['tenant'] = provider
             log.debug('Provider: {0}'.format(provider))
 
             print ("Called with slug: {0}".format(request.args.get('slug')))
