@@ -396,7 +396,10 @@ class BaseSecurityManager(AbstractSecurityManager):
                 # set branches to the session
                 branches_data_res = self.appbuilder.sm.oauth_remotes[provider].get('' + scheme + host + '/qsystem/rest/servicepoint/branches')
                 user_branches = []
-                branches_data = branches_data_res.data
+                if 'Error' in str(branches_data_res.data):
+                    log.error("No access to branches - fix shiro.ini")
+                else:
+                    branches_data = branches_data_res.data
 
                 for branch_data in branches_data:
                     branch_name = branch_data.get('name')
