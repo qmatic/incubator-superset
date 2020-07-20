@@ -536,6 +536,17 @@ class AuthOAuthView(AuthView):
             log.debug("Already authenticated {0}".format(g.user))
             return redirect(self.appbuilder.get_url_for_index)
         if provider is None:
+            tenantId = request.cookies.get('tenantId')
+            if tenantId:
+                for _provider in self.appbuilder.sm.oauth_providers:
+                    if _provider['name'] == tenantId:
+                        tenant_auth_url = _provider['remote_app']['authorize_url']
+                        tenant_domain = tenant_auth_url.replace('/oauth2server/oauth/authorize','')
+                        return redirect(tenant_domain)
+                log.warn('No provider is found for cookie- tenant : ' + tenantId)
+            else:
+                log.warn('No tenant Id in the cookie ......... ')
+            
             return self.render_template(self.login_template,
                                providers = self.appbuilder.sm.oauth_providers,
                                title=self.title,
@@ -596,7 +607,12 @@ class AuthOAuthView(AuthView):
             return redirect('login')
         else:
             login_user(user)
-            return redirect(self.appbuilder.get_url_for_index)
+            response = make_response(redirect(self.appbuilder.get_url_for_index))
+            key = 'tenantId'
+            cookie = request.cookies.get(key, None)
+            if not cookie:
+                response.set_cookie(key, provider , max_age=60 * 60 * 24)
+            return response
 
 
 class AuthRemoteUserView(AuthView):
