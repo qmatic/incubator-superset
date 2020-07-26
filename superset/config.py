@@ -556,11 +556,19 @@ try:
         for key in dir(override_conf):
             if key.isupper():
                 setattr(module, key, getattr(override_conf, key))
+        override_conf = imp.load_source(
+            'insights_version_config',
+            os.environ[CONFIG_PATH_ENV_VAR])
+        for key in dir(override_conf):
+            if key.isupper():
+                setattr(module, key, getattr(override_conf, key))
 
     else:
         from superset_config import *  # noqa
         import superset_config
         print('Loaded your LOCAL configuration at [{}]'.format(
             superset_config.__file__))
+        from insights_version_config import *
+        import insights_version_config
 except ImportError:
     pass
