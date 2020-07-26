@@ -1,0 +1,8 @@
+.version {
+	text-align: center;
+	font-weight: 400;
+	color:rgba(255, 255, 255, 0.5);
+	margin-top: 0.3rem;
+	margin-bottom: 0.3rem;
+	font-size: .875rem;
+}

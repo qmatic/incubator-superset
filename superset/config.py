@@ -649,6 +649,8 @@ elif importlib.util.find_spec("superset_config"):
         import superset_config  # noqa pylint: disable=import-error
 
         print(f"Loaded your LOCAL configuration at [{superset_config.__file__}]")
+        from insights_version_config import *  # noqa pylint: disable=import-error
+        import insights_version_config  # noqa pylint: disable=import-error
     except Exception:
         logging.exception("Found but failed to import local superset_config")
         raise
