@@ -476,7 +476,7 @@ class DashboardModelView(SupersetModelView, DeleteMixin):  # noqa
     ]
     show_columns = edit_columns + ["table_names", "charts"]
     search_columns = ("dashboard_title", "slug", "owners", "published")
-    add_columns = edit_columns
+    add_columns = ["dashboard_title", "owners", "position_json", "css", "json_metadata", "published"]
     base_order = ("changed_on", "desc")
     description_columns = {
         "position_json": _(
@@ -520,6 +520,17 @@ class DashboardModelView(SupersetModelView, DeleteMixin):  # noqa
 
     def pre_add(self, obj):
         obj.slug = obj.slug or None
+        
+        if obj.dashboard_title is None:
+            raise Exception('Dashboard could not create. Title is empty.')
+
+        if session['oauth_provider'] is None:
+            raise Exception('Oauth provider not in session.')
+        
+        dashboard_name = re.sub(r"\s+", "", obj.dashboard_title.lower())
+        tenant_domain = session['oauth_provider'].replace('.', '')
+        obj.slug = tenant_domain + '_' + dashboard_name
+        
         if obj.slug:
             obj.slug = obj.slug.strip()
             obj.slug = obj.slug.replace(" ", "-")
