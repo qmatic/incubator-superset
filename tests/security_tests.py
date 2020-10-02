@@ -17,8 +17,14 @@
 import inspect
 import unittest
 
-from superset import app, appbuilder, security_manager
+from superset import app, appbuilder, security_manager, db
+from superset.connectors.sqla.models import SqlaTable
+from superset.models.core import Database
 from .base_tests import SupersetTestCase
+
+TEST_ROLE = 'datasource_access'
+TEST_USER = 'datasource_user'
+TEST_DB = 'datasource_db'
 
 
 def get_perm_tuples(role_name):
@@ -324,3 +330,64 @@ class RolePermissionTests(SupersetTestCase):
         if unsecured_views:
             view_str = "\n".join([str(v) for v in unsecured_views])
             raise Exception(f"Some views are not secured:\n{view_str}")
+
+
+class DatasourceAccessTests(SupersetTestCase):
+
+    def __init__(self, *args, **kwargs):
+        super(DatasourceAccessTests, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def setUpClass(cls):
+
+        role = security_manager.role_model(name=TEST_ROLE)
+
+        perm = security_manager.find_permission_view_menu('can_add', 'SliceModelView')
+        role.permissions.append(perm)
+
+        appbuilder.sm.add_user(
+            TEST_USER, 'datasource', 'user', 'datasource@user.com',
+            role,
+            'general')
+
+        database = Database(database_name=TEST_DB)
+
+        table1 = SqlaTable(table_name='table_for_test_role', database=database)
+        table2 = SqlaTable(table_name='table_not_for_test_role', database=database)
+
+        db.session.add_all([table1, table2])
+
+        db.session.commit()
+
+    @classmethod
+    def tearDownClass(cls):
+        db.session.delete(security_manager.find_role(TEST_ROLE))
+        db.session.delete(appbuilder.sm.find_user(TEST_USER))
+        db.session.delete(
+            db.session.query(Database)
+                .filter_by(database_name=TEST_DB)
+                .first()
+        )
+        db.session.commit()
+
+    def setUp(self):
+        self.login(TEST_USER, 'general')
+
+    def tearDown(self):
+        self.logout()
+        db.session.commit()
+        db.session.close()
+
+    def test_sees_datasources_has_permissions_for(self):
+        table = db.session.query(SqlaTable).filter_by(table_name='table_for_test_role').first()
+        perm = security_manager.find_permission_view_menu('datasource_access', table.perm)
+        role = security_manager.find_role(TEST_ROLE)
+
+        role.permissions.append(perm)
+        db.session.commit()
+
+        url = '/slicemodelview/add'
+        resp = self.client.get(url)
+
+        self.assertIn('table_for_test_role', str(resp.data))
+        self.assertNotIn('table_not_for_test_role', str(resp.data))
