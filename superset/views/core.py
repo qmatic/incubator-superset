@@ -2850,31 +2850,62 @@ class Superset(BaseSupersetView):
         ), 500
 
     @expose('/welcome')
-    def welcome(self):
+	def welcome(self):
         """Personalized welcome page"""
         if not g.user or not g.user.get_id():
             return redirect(appbuilder.get_url_for_login)
 
         print("Welcome...{0}".format(UserAttribute.welcome_dashboard_id))
+        slis = models.Slice  # noqa
+        dash = models.Dashboard  # noqa
+        user = security_manager.user_model
+        
+        datasource_perms = set()
+        for role in g.user.roles:
+            for perm_view in role.permissions:
+                datasource_perms.add(perm_view.view_menu.name)
 
-        Dash = models.Dashboard  # noqa
+        slice_ids_qry = (
+            db.session
+            .query(slis.id)
+            .filter(slis.perm.in_(datasource_perms))
+        )
+
+        owner_ids_qry = (
+            db.session
+            .query(dash.id)
+            .join(dash.owners)
+            .filter(user.id == user.get_user_id())
+        )
+
         qry = (
-                db.session.query(
-                    Dash
-                    )
-                )
-
+            db.session.query(models.Dashboard)
+            .filter(
+                or_(dash.id.in_(
+                    db.session.query(dash.id)
+                    .distinct()
+                    .join(dash.slices)
+                    .filter(slis.id.in_(slice_ids_qry)),
+                ), dash.id.in_(owner_ids_qry)),
+            )
+            .order_by(desc(dash.id))
+        )
+        
         if session.get('orchestra'):
-            OrchestraOrigin = session['orchestra'].split('.')[0]
+            orchestra_origin = session['orchestra'].split('.')[0]
 
-            for dashboard in qry.all():
-                print("Slug: {0}".format(dashboard.slug))
-                if request.args.get('slug') != 'hwdashboard' and OrchestraOrigin.lower() in dashboard.slug and '_main' in dashboard.slug:
-                    return self.dashboard(str(dashboard.id))
-                else:
-                    if request.args.get('slug') == 'hwdashboard' and OrchestraOrigin.lower() in dashboard.slug and '_hwdashboard' in dashboard.slug:
+            if session.get('orchestra_slug'):
+                for dashboard in qry.all():
+                    print("Slug: {0}".format(dashboard.slug))
+                    if request.args.get('slug') != 'hwdashboard' and orchestra_origin.lower() in dashboard.slug and '_main' in dashboard.slug:
                         return self.dashboard(str(dashboard.id))
-
+                    else:
+                        if request.args.get('slug') == 'hwdashboard' and orchestra_origin.lower() in dashboard.slug and '_hwdashboard' in dashboard.slug:
+                            return self.dashboard(str(dashboard.id))
+                        
+                for dashboard in qry.all():
+                    return self.dashboard(str(dashboard.id))
+                    
             for dashboard in qry.all():
                 return self.dashboard(str(dashboard.id))
             
