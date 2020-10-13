@@ -25,6 +25,7 @@ import sqlalchemy as sqla
 from sqlalchemy import and_, create_engine, MetaData, or_, update, case
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import desc
 from unidecode import unidecode
 from werkzeug.routing import BaseConverter
 from werkzeug.utils import secure_filename
