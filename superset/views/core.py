@@ -2851,7 +2851,7 @@ class Superset(BaseSupersetView):
         ), 500
 
     @expose('/welcome')
-	def welcome(self):
+    def welcome(self):
         """Personalized welcome page"""
         if not g.user or not g.user.get_id():
             return redirect(appbuilder.get_url_for_login)
