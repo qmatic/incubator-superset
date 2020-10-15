@@ -557,8 +557,7 @@ try:
             if key.isupper():
                 setattr(module, key, getattr(override_conf, key))
         override_conf = imp.load_source(
-            'insights_version_config',
-            os.environ['SUPERSET_HOME']+'insights_version_config.py')
+            'insights_version_config','../insights_version_config.py')
         for key in dir(override_conf):
             if key.isupper():
                 setattr(module, key, getattr(override_conf, key))
