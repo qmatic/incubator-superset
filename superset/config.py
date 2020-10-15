@@ -552,13 +552,13 @@ try:
         module = sys.modules[__name__]
         override_conf = imp.load_source(
             'superset_config',
-            os.environ[CONFIG_PATH_ENV_VAR]+'superset_config.py')
+            os.environ[CONFIG_PATH_ENV_VAR]+'/superset_config.py')
         for key in dir(override_conf):
             if key.isupper():
                 setattr(module, key, getattr(override_conf, key))
         override_conf = imp.load_source(
             'insights_version_config',
-            os.environ[CONFIG_PATH_ENV_VAR]+'insights_version_config.py')
+            os.environ[CONFIG_PATH_ENV_VAR]+'/insights_version_config.py')
         for key in dir(override_conf):
             if key.isupper():
                 setattr(module, key, getattr(override_conf, key))
