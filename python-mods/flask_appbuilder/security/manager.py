@@ -398,6 +398,7 @@ class BaseSecurityManager(AbstractSecurityManager):
                 user_branches = []
                 if 'Error' in str(branches_data_res.data):
                     log.error("No access to branches - fix shiro.ini")
+                    branches_data = []
                 else:
                     branches_data = branches_data_res.data
 
