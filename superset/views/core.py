@@ -2894,17 +2894,16 @@ class Superset(BaseSupersetView):
         
         if session.get('orchestra'):
             orchestra_origin = session['orchestra'].split('.')[0]
+            req_slug = request.args.get('slug')
+            print("Slug form request: {0}".format(req_slug))
 
-            if session.get('orchestra_slug'):
-                for dashboard in qry.all():
-                    print("Slug: {0}".format(dashboard.slug))
-                    if request.args.get('slug') != 'hwdashboard' and orchestra_origin.lower() in dashboard.slug and '_main' in dashboard.slug:
-                        return self.dashboard(str(dashboard.id))
-                    else:
-                        if request.args.get('slug') == 'hwdashboard' and orchestra_origin.lower() in dashboard.slug and '_hwdashboard' in dashboard.slug:
-                            return self.dashboard(str(dashboard.id))
-                        
-                for dashboard in qry.all():
+            for dashboard in qry.all():
+                print("Slug: {0}".format(dashboard.slug))
+                if req_slug is not None and orchestra_origin.lower() in dashboard.slug and '_hwdashboard' in dashboard.slug:
+                    print("return HW Main")
+                    return self.dashboard(str(dashboard.id))
+                elif req_slug is None and orchestra_origin.lower() in dashboard.slug and '_main' in dashboard.slug:
+                    print("return Main")
                     return self.dashboard(str(dashboard.id))
                     
             for dashboard in qry.all():

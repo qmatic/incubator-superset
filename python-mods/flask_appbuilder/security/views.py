@@ -528,9 +528,6 @@ class AuthOAuthView(AuthView):
             session['tenant'] = provider
             log.debug('Provider: {0}'.format(provider))
 
-            print ("Called with slug: {0}".format(request.args.get('slug')))
-            if request.args.get('slug') is not None:
-                session['orchestra_slug'] = request.args.get('slug')
 
         if g.user is not None and g.user.is_authenticated:
             log.debug("Already authenticated {0}".format(g.user))
