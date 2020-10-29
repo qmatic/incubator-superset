@@ -528,7 +528,6 @@ class AuthOAuthView(AuthView):
             session['tenant'] = provider
             log.debug('Provider: {0}'.format(provider))
 
-
         if g.user is not None and g.user.is_authenticated:
             log.debug("Already authenticated {0}".format(g.user))
             return redirect(self.appbuilder.get_url_for_index)
