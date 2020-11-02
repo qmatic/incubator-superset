@@ -2899,12 +2899,13 @@ class Superset(BaseSupersetView):
 
             for dashboard in qry.all():
                 print("Slug: {0}".format(dashboard.slug))
-                if req_slug is not None and orchestra_origin.lower() in dashboard.slug and '_hwdashboard' in dashboard.slug:
-                    print("return HW Main")
-                    return self.dashboard(str(dashboard.id))
-                elif req_slug is None and orchestra_origin.lower() in dashboard.slug and '_main' in dashboard.slug:
-                    print("return Main")
-                    return self.dashboard(str(dashboard.id))
+                if dashboard_slug is not None:
+                    if req_slug is not None and orchestra_origin.lower() in dashboard.slug and '_hwdashboard' in dashboard.slug:
+                        print("return HW Main")
+                        return self.dashboard(str(dashboard.id))
+                    elif req_slug is None and orchestra_origin.lower() in dashboard.slug and '_main' in dashboard.slug:
+                        print("return Main")
+                        return self.dashboard(str(dashboard.id))
                     
             for dashboard in qry.all():
                 return self.dashboard(str(dashboard.id))
