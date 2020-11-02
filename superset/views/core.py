@@ -2898,7 +2898,8 @@ class Superset(BaseSupersetView):
             print("Slug form request: {0}".format(req_slug))
 
             for dashboard in qry.all():
-                print("Slug: {0}".format(dashboard.slug))
+                dashboard_slug = dashboard.slug
+                print("Slug: {0}".format(dashboard_slug))
                 if dashboard_slug is not None:
                     if req_slug is not None and orchestra_origin.lower() in dashboard.slug and '_hwdashboard' in dashboard.slug:
                         print("return HW Main")
