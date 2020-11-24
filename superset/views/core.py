@@ -2894,7 +2894,7 @@ class Superset(BaseSupersetView):
         
         if session.get('orchestra'):
             orchestra_origin = session['orchestra'].split('.')[0]
-            req_slug = request.args.get('slug')
+            req_slug = session.get('orchestra_slug')
             print("Slug form request: {0}".format(req_slug))
 
             for dashboard in qry.all():
