@@ -523,7 +523,12 @@ class AuthOAuthView(AuthView):
     def login(self, provider=None, register=None):
         print ("Going to call authorize for: {0}".format(provider))
         if provider is not None:
-            session.clear()
+            
+            currentOrch = session.get("orchestra")
+            if currentOrch is not None and str(provider) != str(currentOrch): 
+                session.clear()
+            
+            session['orchestra_slug'] = None
             session['orchestra'] = provider
             session['tenant'] = provider
             log.debug('Provider: {0}'.format(provider))
