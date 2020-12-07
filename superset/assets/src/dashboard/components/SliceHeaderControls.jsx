@@ -143,7 +143,10 @@ class SliceHeaderControls extends React.PureComponent {
             </MenuItem>
           )}
 
-
+	  {(slice.viz_type != 'filter_box') && (    
+	    <MenuItem onClick={this.exportCSV}>{t('Export CSV')}</MenuItem>
+	  )}
+	    
           {this.props.supersetCanExplore && (
             <MenuItem onClick={this.exploreChart}>
               {t('Explore chart')}
