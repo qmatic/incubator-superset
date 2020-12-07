@@ -393,21 +393,25 @@ class BaseSecurityManager(AbstractSecurityManager):
                 me = self.appbuilder.sm.oauth_remotes[provider].get('' + scheme + host + '/qsystem/rest/security/account')
                 print("User info from Orcestra NEW: {0}".format(me.data))
 
-                # set branches to the session
-                branches_data_res = self.appbuilder.sm.oauth_remotes[provider].get('' + scheme + host + '/qsystem/rest/servicepoint/branches')
-                user_branches = []
-                if 'Error' in str(branches_data_res.data):
-                    log.error("No access to branches - fix shiro.ini")
-                    branches_data = []
+                # check superadmin. Do other admins should give all branches permission ?
+                if me.data.get('permissions') and '*:*' in me.data.get('permissions'):
+                    log.debug("Skip applying branch filtering for superadmin ....")
                 else:
-                    branches_data = branches_data_res.data
+                    # set branches to the session
+                    branches_data_res = self.appbuilder.sm.oauth_remotes[provider].get('' + scheme + host + '/qsystem/rest/servicepoint/branches')
+                    user_branches = []
+                    if 'Error' in str(branches_data_res.data):
+                        log.error("No access to branches - fix shiro.ini")
+                        branches_data = []
+                    else:
+                        branches_data = branches_data_res.data
 
-                for branch_data in branches_data:
-                    branch_name = branch_data.get('name')
-                    user_branches.append(branch_name)
+                    for branch_data in branches_data:
+                        branch_name = branch_data.get('name')
+                        user_branches.append(branch_name)
+                    print ("User has permissions to {0} branches ".format(user_branches))
+                    session['permitted_branches'] = user_branches
 
-                print ("User has permissions to {0} branches ".format(user_branches))
-                session['permitted_branches'] = user_branches
 
                 return {'username': provider  + "_" + me.data.get('userName', ''),
                     'email': me.data.get('email', ''),

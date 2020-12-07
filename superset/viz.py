@@ -302,27 +302,39 @@ class BaseViz(object):
             'druid_time_origin': form_data.get('druid_time_origin', ''),
         }
 
-        has_branch_filter = False
         filters  = self.form_data.get('filters', [])
-        if session.get('permitted_branches') :
-            permitted_branches = session['permitted_branches']
-            branches = []
+        # non super user
+        if session.get('permitted_branches'):
+            datasource_columns = self.datasource.columns
+            # datasource_columns = db.session.query(DruidDatasource).filter_by(id=self.datasource.id).first()
+            hasBranchColumn = False
+            for columnInfo in datasource_columns:
+                if "branch" == columnInfo.column_name :
+                    hasBranchColumn = True
+                    break
 
-            for filter in filters:
-                key = filter.get("col")
-                if( key == "branch" ):
-                    has_branch_filter = True
-                    unfiltered_branches = filter.get("val")
+            if hasBranchColumn :
+                has_branch_filter = False
+                permitted_branches = session['permitted_branches']
+                branches = []
 
-                    for branchName in unfiltered_branches:
-                        if branchName in permitted_branches:
-                            branches.append(branchName)
+                for filter in filters:
+                    key = filter.get("col")
+                    if( key == "branch" ):
+                        has_branch_filter = True
+                        unfiltered_branches = filter.get("val")
 
-                    filter['val'] = branches
+                        for branchName in unfiltered_branches:
+                            if branchName in permitted_branches:
+                                branches.append(branchName)
 
-            if has_branch_filter == False :
-                branch_filter = {'col': 'branch', 'op': 'in', 'val': permitted_branches}
-                filters.append(branch_filter)
+                        filter['val'] = branches
+
+                if has_branch_filter == False :
+                    branch_filter = {'col': 'branch', 'op': 'in', 'val': permitted_branches}
+                    filters.append(branch_filter)
+            else:
+                logging.info("Datasource : '{}' doesn't have a branch column ...".format(self.datasource.datasource_name))
 
         d = {
             'granularity': granularity,
