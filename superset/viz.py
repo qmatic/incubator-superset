@@ -302,39 +302,17 @@ class BaseViz(object):
             'druid_time_origin': form_data.get('druid_time_origin', ''),
         }
 
-        filters  = self.form_data.get('filters', [])
         # non super user
         if session.get('permitted_branches'):
-            datasource_columns = self.datasource.columns
-            # datasource_columns = db.session.query(DruidDatasource).filter_by(id=self.datasource.id).first()
-            hasBranchColumn = False
-            for columnInfo in datasource_columns:
-                if "branch" == columnInfo.column_name :
-                    hasBranchColumn = True
-                    break
-
+            branch_column_name = "branch"
+            hasBranchColumn = self.has_branch_dimension(branch_column_name)
             if hasBranchColumn :
-                has_branch_filter = False
-                permitted_branches = session['permitted_branches']
-                branches = []
-
-                for filter in filters:
-                    key = filter.get("col")
-                    if( key == "branch" ):
-                        has_branch_filter = True
-                        unfiltered_branches = filter.get("val")
-
-                        for branchName in unfiltered_branches:
-                            if branchName in permitted_branches:
-                                branches.append(branchName)
-
-                        filter['val'] = branches
-
-                if has_branch_filter == False :
-                    branch_filter = {'col': 'branch', 'op': 'in', 'val': permitted_branches}
-                    filters.append(branch_filter)
+                self.append_branch_filter(branch_column_name)
             else:
-                logging.info("Datasource : '{}' doesn't have a branch column ...".format(self.datasource.datasource_name))
+                branch_column_name = "location"
+                hasBranchColumn = self.has_branch_dimension(branch_column_name)
+                if hasBranchColumn:
+                    self.append_branch_filter(branch_column_name)
 
         d = {
             'granularity': granularity,
@@ -353,6 +331,41 @@ class BaseViz(object):
             'is_prequery': False,
         }
         return d
+
+    def has_branch_dimension(self, branch_column_name):
+        datasource_columns = self.datasource.columns
+        # datasource_columns = db.session.query(DruidDatasource).filter_by(id=self.datasource.id).first()
+        for columnInfo in datasource_columns:
+            if branch_column_name == columnInfo.column_name:
+                return True
+        return False
+
+    def append_branch_filter(self, branch_column_name):
+        filters  = self.form_data.get('filters', [])
+        has_branch_filter = False
+        permitted_branches = session['permitted_branches']
+        branches = []
+        for filter in filters:
+            key = filter.get("col")
+            if( key == branch_column_name ):
+                has_branch_filter = True
+                unfiltered_branches = filter.get("val")
+                for branchName in unfiltered_branches:
+                    if branchName in permitted_branches:
+                        branches.append(branchName)
+
+                filter['val'] = branches
+        if has_branch_filter == False :
+            branchLocations = []
+            if "location" == branch_column_name:
+                for branchName in permitted_branches:
+                    branchLocations.append(branchName)
+                branchLocations.append("-")
+            else:
+                branchLocations = permitted_branches
+
+            branch_filter = {'col': branch_column_name, 'op': 'in', 'val': branchLocations}
+            filters.append(branch_filter)
 
     @property
     def cache_timeout(self):
