@@ -398,6 +398,7 @@ class BaseSecurityManager(AbstractSecurityManager):
                     log.debug("Skip applying branch filtering for superadmin ....")
                 else:
                     # set branches to the session
+                    user_branchIds = me.data.get('branchIds')
                     branches_data_res = self.appbuilder.sm.oauth_remotes[provider].get('' + scheme + host + '/qsystem/rest/servicepoint/branches')
                     user_branches = []
                     if 'Error' in str(branches_data_res.data):
@@ -408,7 +409,9 @@ class BaseSecurityManager(AbstractSecurityManager):
 
                     for branch_data in branches_data:
                         branch_name = branch_data.get('name')
-                        user_branches.append(branch_name)
+                        branch_id = branch_data.get('id')
+                        if branch_id in user_branchIds:
+                            user_branches.append(branch_name)
                     print ("User has permissions to {0} branches ".format(user_branches))
                     session['permitted_branches'] = user_branches
 
