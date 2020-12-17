@@ -697,7 +697,10 @@ class DashboardModelView(SupersetModelView, DeleteMixin):  # noqa
 
         dashboard_name = re.sub(r"\s+", "", obj.dashboard_title.lower())
         tenant_domain = session['oauth_provider'].replace('.', '')
-        obj.slug = tenant_domain + '_' + dashboard_name
+
+        # skip for dashboard update
+        if not obj.slug:
+            obj.slug = tenant_domain + '_' + dashboard_name
 
         if obj.slug:
             obj.slug = obj.slug.strip()
@@ -712,6 +715,9 @@ class DashboardModelView(SupersetModelView, DeleteMixin):  # noqa
             slc.owners = list(set(owners) | set(slc.owners))
 
     def pre_update(self, obj):
+        if obj.slug is None or not obj.slug:
+            raise Exception('Dashboard could not save. Slug is empty.')
+
         check_ownership(obj)
         self.pre_add(obj)
 
