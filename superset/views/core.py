@@ -717,6 +717,17 @@ class DashboardModelView(SupersetModelView, DeleteMixin):  # noqa
     def pre_update(self, obj):
         if obj.slug is None or not obj.slug:
             raise Exception('Dashboard could not save. Slug is empty.')
+        else:
+            if session.get('oauth_provider'):
+                tenant_domain = session['oauth_provider'].replace('.', '')
+                tenant_domain_prefix = '' + tenant_domain + '_'
+            else:
+                # How to find TD for global admins ? Suggestion - UI show /edit only the postfix. Automatically add prefix (td)
+                raise Exception('Dashboard could not save. Could not found associate tenant .. ')
+
+            if not obj.slug.startswith(tenant_domain_prefix):
+                logging.warn('User of td : {0} tried to set slug : {1}'.format(session.get('oauth_provider'),obj.slug))
+                raise Exception("Dashboard could not save. Slug is not in correct format" )
 
         check_ownership(obj)
         self.pre_add(obj)
